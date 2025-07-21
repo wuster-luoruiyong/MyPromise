@@ -183,6 +183,83 @@ function resolvePromise(bridgePromise, x, resolve, reject) {
   }
 }
 
+try {
+  module.exports = MyPromise;
+} catch (e) {}
+
+
+// promise方法实现
+MyPromise.all = function(promises) {
+  return new MyPromise(function(resolve, reject) {
+      let result = [];
+      let count = 0;
+      for (let i = 0; i < promises.length; i++) {
+          promises[i].then(function(data) {
+              result[i] = data;
+              if (++count == promises.length) {
+                  resolve(result);
+              }
+          }, function(error) {
+              reject(error);
+          });
+      }
+  });
+}
+
+MyPromise.race = function(promises) {
+  return new MyPromise(function(resolve, reject) {
+      for (let i = 0; i < promises.length; i++) {
+          promises[i].then(function(data) {
+              resolve(data);
+          }, function(error) {
+              reject(error);
+          });
+      }
+  });
+}
+
+
+MyPromise.resolve = function(value) {
+  return new MyPromise(resolve => {
+      resolve(value);
+  });
+}
+
+MyPromise.reject = function(error) {
+  return new MyPromise((resolve, reject) => {
+      reject(error);
+  });
+}
+
+MyPromise.allSettled = function(promises) {
+  return new MyPromise(function(resolve, reject) {
+      let result = [];
+      let count = 0;
+      let len = promises.length;
+      for (let i = 0; i < len; i++) {
+          promises[i].then(function(data) {
+              result[i] = {
+                  status: 'fulfilled',
+                  value: data
+              };
+              if (++count == len) {
+                  resolve(result);
+              }
+          }, function(error) {
+              result[i] = {
+                  status: 'rejected',
+                  reason: error
+                  };
+              if (++count == len) {
+                  resolve(result);
+              }
+          });
+      }
+  });
+}
+
+
+
 // 执行测试用例需要用到的代码
 MyPromise.deferred = function () {
   let defer = {};
@@ -192,7 +269,3 @@ MyPromise.deferred = function () {
   });
   return defer;
 };
-
-try {
-  module.exports = MyPromise;
-} catch (e) {}
